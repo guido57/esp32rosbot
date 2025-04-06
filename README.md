@@ -12,6 +12,7 @@ This is a micro-ROS ESP32 program to:
 * publish /debug_logs
 * go to the docking-charging station when the battery is low
 
+This program, compared with https://github.com/guido57/uros_enc_LD19_arduino, can work even without WiFi, but in this case publishing to ROS2 is precluded (of course).
 
 # SOFTWARE ARCHITECTURE
 
