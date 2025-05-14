@@ -149,7 +149,7 @@ bool Nav::getCurrentPose() {
     midWheelsPose.x = x_filter->update(midWheelsPose.x);
     midWheelsPose.y = y_filter->update(midWheelsPose.y);
     midWheelsPose.theta = theta_filter->updateTheta(midWheelsPose.theta);
-    LOG_DEBUG("Wheels Pose is x=%.3f y=%.3f theta=%.3f", midWheelsPose.x,midWheelsPose.y, midWheelsPose.theta);
+    LOG_DEBUG("After filtering Wheels Pose is x=%.3f y=%.3f theta=%.3f", midWheelsPose.x,midWheelsPose.y, midWheelsPose.theta);
     return true;
 }
 
@@ -159,12 +159,12 @@ void Nav::recordBreadcrumb() {
         breadcrumbs->breadcrumbs.push_back( (Goal&) currentPose);
     }else{
         float dist = calculateDistance(currentPose, breadcrumbs->breadcrumbs.back());
-        LOG_DEBUG("currentPose=(%.1f,%.1f). Distance from last breadcrumb: %.3f. breadcrumbs.size()=%d", 
-            currentPose.x, currentPose.y, dist, breadcrumbs->breadcrumbs.size());
+        //LOG_DEBUG("currentPose=(%.1f,%.1f). Distance from last breadcrumb: %.3f. breadcrumbs.size()=%d", 
+        //    currentPose.x, currentPose.y, dist, breadcrumbs->breadcrumbs.size());
         if ( dist > 0.15) {
             breadcrumbs->breadcrumbs.push_back({currentPose.x, currentPose.y, currentPose.theta});
-            LOG_DEBUG("Added a breadcrumb at (%.1f, %.1f). Now breadcrumbs has %d elements",
-                currentPose.x, currentPose.y, breadcrumbs->breadcrumbs.size());
+            //LOG_DEBUG("Added a breadcrumb at (%.1f, %.1f). Now breadcrumbs has %d elements",
+            //    currentPose.x, currentPose.y, breadcrumbs->breadcrumbs.size());
         }
     }
 }
@@ -240,19 +240,13 @@ void Nav::navigateToChargingStation() {
 
     targetVisible = getCurrentPose();
     if( targetVisible == false ){
-        LOG_DEBUG("Target NOT visible. state=%d lastTarget=%lu targetTimeOut=%lu", state, lastTarget, targetTimeOut);
         if(millis() > lastTarget + targetTimeOut ){
             targetVisible5 = false; // after 5 seconds declare the target not visible
-            //LOG_INFO("Timeout: no target after %ld milliseconds.", targetTimeOut);
         }
-        // read the actual position from Odometry
-        // midWheelsPose = getOdomPose();
-
     }else{ 
         // current position was load into midWheelsPose by getCurrentPose()
         lastTarget = millis();
         targetVisible5 = true;
-        LOG_DEBUG("Target is visible.");
     }
 
     bool no_way = false;
@@ -276,19 +270,16 @@ void Nav::navigateToChargingStation() {
                     state = BREADCRUMB_FOLLOWING;
                     LOG_INFO("Raw Breadcrumbs available (%d). Switch from IDLE to BREADCRUMB_FOLLOWING.",
                         breadcrumbs->breadcrumbs.size());
-                    for(Goal bc : breadcrumbs->breadcrumbs){ 
-                        LOG_INFO("Breadcrumb (%.3f,%.3f,%.3f)", bc.x, bc.y, bc.theta); 
-                    }    
                     int raw_breadcrumbs = breadcrumbs->breadcrumbs.size();
                     
                     breadcrumbs->Clean(); // get rid of the path loops
                     
                     LOG_INFO("No target visible and %d cleaned breadcrumbs available (%d raw breadcrumbs). Switch from IDLE to BREADCRUMB_FOLLOWING.",
                         breadcrumbs->breadcrumbs.size(), raw_breadcrumbs);
-                    LOG_INFO("Clean Breadcrumbs available (%d).",
+                    LOG_DEBUG("Clean Breadcrumbs available (%d).",
                         breadcrumbs->breadcrumbs.size());
                     for(Goal bc : breadcrumbs->breadcrumbs){ 
-                        LOG_INFO("Breadcrumb (%.3f,%.3f,%.3f)", bc.x, bc.y, bc.theta); 
+                        LOG_DEBUG("Breadcrumb (%.3f,%.3f,%.3f)", bc.x, bc.y, bc.theta); 
                     }    
                     PoseA = midWheelsPose;
                     velocityState = RobotState::RotatingToPosition;
@@ -361,16 +352,6 @@ void Nav::navigateToChargingStation() {
                 // scan and check all the breadcrumbs to find the farthest inside the local map
                 //LOG_DEBUG("midWheelsPose=(%.3f,%.3f,%.3f)", midWheelsPose.x, midWheelsPose.y, midWheelsPose.theta);
                 astar.initialize(midWheelsPose, & (breadcrumbs->breadcrumbs), lidar.ranges, mapWidth, mapHeight); // set ASTAR_STARTED
-            
-                // if(breadcrumbs->breadcrumbs[15].reachable == true){
-                //     LOG_DEBUG("==========================");
-                //     LOG_DEBUG("just after astar.initialize Goal 15 is reachable...");
-                //     LOG_DEBUG("==========================");
-                //     for(int i=0; i < breadcrumbs->breadcrumbs.size();i++){
-                //         Goal goal = breadcrumbs->breadcrumbs[i];
-                //         LOG_DEBUG("...see goal %d: (%f, %f) reachable=%d", i, goal.x, goal.y, goal.reachable); 
-                //     }
-                // }
             }
             
             if(astar.state == AStar::ASTAR_STARTED){
@@ -380,18 +361,11 @@ void Nav::navigateToChargingStation() {
                         break;
                     }
                 }
-                LOG_INFO("A* step loop ended after %d steps with state=%d",astar.steps, astar.state);
             }    
 
             if(astar.state == AStar::ASTAR_COMPLETE || astar.state == AStar::ASTAR_FAILED){
                 
-                // for(int i=0; i < breadcrumbs->breadcrumbs.size();i++){
-                //     Goal farthestGoal = breadcrumbs->breadcrumbs[i];
-                //     LOG_DEBUG("Checking goal %d: (%f, %f) reachable=%d", i, farthestGoal.x, farthestGoal.y, farthestGoal.reachable); 
-                // }
-                
                 int frg = astar.getFarthestReachableGoal();
-                LOG_DEBUG("%s frg=%d", astar.state == AStar::ASTAR_COMPLETE ? "ASTAR_COMPLETE" : "ASTAR_FAILED", frg);
                 if(frg < 0){
                     LOG_DEBUG("No breadcrumb is reachable. Stop the motors and restart");
                     stop();
@@ -405,7 +379,7 @@ void Nav::navigateToChargingStation() {
                     std::vector<PoseInt> new_path = astar.getPath(frg);
                     astar.drawMap();
                     if(new_path.size() == 0){
-                        LOG_DEBUG("frg=%d but no path. Stop the motors and restart",frg);
+                        LOG_ERROR("frg=%d but no path. Stop the motors and restart",frg);
                         stop();
                         no_way = true;
                     }else{
@@ -561,7 +535,7 @@ void Nav::navigateToChargingStation() {
             if(current > 0.0 ){
                 // charging the battery
             }else{
-                LOG_DEBUG("Charging Current = 0. Switch from CHARGING to DOCKING");
+                LOG_INFO("Charging Current = 0. Switch from CHARGING to DOCKING");
                 state = DOCKING;
             }
             break;
