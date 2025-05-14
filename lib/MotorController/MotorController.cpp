@@ -57,7 +57,9 @@
     CurrentTimeforError = millis();
     float delta2 = ((float)CurrentTimeforError - (float)PreviousTimeForError) / 1.0e3;
     if(delta2 == 0.0)
-      return NAN;  
+      return NAN;
+    if(delta2 > 0.5)
+      delta2 = 0.5; // avoid too big time intervals
     error = setpoint - feedback;
     eintegral = eintegral + (error * delta2);
     ederivative = (error - previousError) / delta2;

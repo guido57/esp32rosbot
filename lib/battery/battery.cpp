@@ -84,7 +84,7 @@ void Battery::timer_callback(rcl_timer_t *timer, int64_t last_call_time) {
   battery_state_msg.header.stamp.nanosec = (millis() % 1000) * 1000000;
 
   // Publish the message
-  rcl_publish(&battery_publisher, &battery_state_msg, NULL);
+  my_rcl_publish(CALLER_BATTERY, &battery_publisher, &battery_state_msg, NULL);
 }
 
 float Battery::getCurrentmA(){

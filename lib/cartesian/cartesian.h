@@ -21,6 +21,17 @@ struct Pose {
     float x;
     float y;
     float theta; // Angle in radians
+    
+
+};
+
+struct Goal {
+    float x;
+    float y;
+    float theta; // Angle in radians
+    bool reachable;
+    int ndx;
+    Goal& operator=(const Pose& pose);
 };
 
 struct Obstacle {
@@ -55,6 +66,9 @@ Pose getWheelsMidpointPose(const Pose &lidarPose);
 
 // calculate distance, regardless theta
 float calculateDistance(Pose poseA, Pose poseB);
+
+// calculate distance, regardless theta
+float calculateDistance(Pose poseA, Goal goalB);
 
 // calculate the angle to go to destPose
 float angleToPose(const Pose& actualPose, const Pose& destPose) ;

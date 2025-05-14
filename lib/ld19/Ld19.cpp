@@ -1,9 +1,11 @@
 // Ld19.cpp
-#include "Ld19.h"
-#include "ros2.h"
+#include <Ld19.h>
+#include <ros2.h>
+#include "MotorController.h"
 #include <rmw_microros/rmw_microros.h>
 #include <vector>
 #include <numeric>
+#include <debuglog.h>
 
 rcl_publisher_t lidar_publisher;
 
@@ -72,6 +74,13 @@ int Ld19::GetNextPacket(){
     return 0;
 }
 
+// Read the LiDAR data from the serial port and process it
+// It loads the data into the ranges and qualities vectors, which are used to store the distance and intensity values for each point.
+// This function is called in a loop to continuously read and process data  from the LiDAR sensor.
+// It uses a timeout mechanism to ensure that it doesn't block indefinitely while waiting for data.
+// The function returns the number of points processed in the current scan.
+// The function uses a circular buffer to store the LiDAR data, and it processes the data in chunks.
+// The function also handles the case where the LiDAR sensor wraps around from 360 degrees to 0 degrees.
 int Ld19::uartRx(){
   
     unsigned long timeout = millis() + 3000;
@@ -137,7 +146,7 @@ int Ld19::uartRx(){
 
             last_angle = angle;
             
-        } // end for           
+        } // end for         
     } // end while
 
     // got timeout 
@@ -189,9 +198,8 @@ extern float actuating_signal_LW, actuating_signal_RW;
 extern int enc_r_total;
 extern int enc_l_total;
 extern float x,y,theta;
-extern int enc_r_errors;
-extern int enc_l_errors;
-
+extern MotorController leftWheel;
+extern MotorController rightWheel;
 
 extern void update_odometry();
 extern void publish_odometry(); 
@@ -217,13 +225,11 @@ void lidar_loop(){
     unsigned long publish_elapsed = millis();
     int nc = 50;
     lidar.processFrame(0,count-1,count);
-    rcl_ret_t ret_pub = rcl_publish(&lidar_publisher, &lidar.scan_msg, NULL);
+    rcl_ret_t ret_pub = my_rcl_publish(rcl_caller_t::CALLER_SCAN, &lidar_publisher, &lidar.scan_msg, NULL);
     
     if(ret_pub != RCL_RET_OK){
         LOG_ERROR("rcl_publish returned %d", ret_pub);
         consecutive_errors ++;
-        // if(consecutive_errors > 10)
-        //     esp_restart();
     }else
         consecutive_errors = 0;
 
@@ -233,7 +239,7 @@ void lidar_loop(){
     update_odometry(); // read the pose 
     unsigned long pub_odom_elapsed = millis();
     publish_odometry(); 
-    pub_odom_elapsed = millis() - pub_odom_elapsed,
+    pub_odom_elapsed = millis() - pub_odom_elapsed;
 
     // calculate loop period  
     total_loop_time = millis()-total_loop_time;
@@ -243,23 +249,10 @@ void lidar_loop(){
     uint64_t mil = rmw_uros_epoch_millis();
     uint64_t nanos = rmw_uros_epoch_nanos();
     
-    LOG_DEBUG("lv=%.3f av=%.3f msL=%.3f msR=%.3f encL=%d encR=%d errL=%d errR=%d LW=%.0f RW=%.0f ||lidar=%dpts uartRx=%lums Proc=%lums Pub=%lums PubOdom=%lums Loop=%lums Freq=%.1fHz Ser2.av=%d",
-        linearVelocity, angularVelocity, currentmsL, currentmsR, enc_l_total, enc_r_total,enc_l_errors, enc_r_errors,  actuating_signal_LW, actuating_signal_RW,
-        count, uart_elapsed, process_elapsed, publish_elapsed, pub_odom_elapsed, total_loop_time, 1000.0/loop_period, Serial2.available()
+    LOG_DEBUG("uartRx=%lums Proc=%lums Pub=%lums PubOdom=%lums Loop=%lums Freq=%.1fHz Ser2.av=%d",
+        uart_elapsed, process_elapsed, publish_elapsed, pub_odom_elapsed, total_loop_time, 1000.0/loop_period, Serial2.available()
     );
+    
     total_loop_time = millis();
-}
-
-
-void lidar_timer_callback(rcl_timer_t * timer, int64_t last_call_time)
-{
-  RCLC_UNUSED(last_call_time);
-  if (timer != NULL )  {
-
-    unsigned long lidar_timer_cb_elapsed = millis(); 
-    lidar_loop();
-    // printf("\r\n%lu lidar_timer_callback took %lu millis. Serial2aval=%d\r\n", 
-    //       millis(), millis()-lidar_timer_cb_elapsed, Serial2.available());
-  }
 }
 

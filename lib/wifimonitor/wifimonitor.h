@@ -18,12 +18,13 @@ public:
         int32_t strength; // Signal strength in dBm
     };
     WiFiMonitor();
-    void begin(rcl_node_t * node);
+    void init_publisher(rcl_node_t * node);
     void publishStatus();
     void Connect();
     void Connect(Hotspot hotspot);
     String BssidToString(uint8_t * bssid);
-
+    void checkAndReconnectWiFi();
+    
 private:
     const char* agent_ip;
     uint16_t agent_port;
@@ -33,7 +34,6 @@ private:
     std_msgs__msg__String wifi_msg;
 
     char wifi_status[200];
-    void checkAndReconnectWiFi();
     
 
     int publish_count;

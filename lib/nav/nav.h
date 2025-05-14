@@ -11,12 +11,13 @@
 #include "Ld19.h"
 #include "ema.cpp"
 #include "astar.h"
+#include "breadcrumbs.h"
 
 #define BUF_SIZE 400
 
-class Charging {
+class Nav {
 public:
-    Charging();
+    Nav();
     void init();
     void move(float linear_velocity, float angular_velocity);
     void stop();
@@ -48,7 +49,7 @@ public:
 
 
 private:
-     enum State { IDLE, BREADCRUMB_FOLLOWING, BREADCRUMB_FOLLOWING_OLD, CHARGING, DOCKING, CROSS_X_AXIS, /* ROTATE_TO_GOAL,*/ REVERSE_TO_GOAL };
+     enum State { IDLE, TELEOP, BREADCRUMB_FOLLOWING, BREADCRUMB_FOLLOWING_OLD, CHARGING, DOCKING, CROSS_X_AXIS, /* ROTATE_TO_GOAL,*/ REVERSE_TO_GOAL };
     State state;
     
     int velocityState;
@@ -58,7 +59,8 @@ private:
     bool targetVisible5 = false;
     unsigned long targetTimeOut = 5000UL; // 5 seconds
     unsigned long lastTarget = 0UL;
-    std::vector<Pose> breadcrumbs;  // Stores waypoints
+    //std::vector<Pose> breadcrumbs;  // Stores waypoints
+    
     void fillBreadcrumbs();
     
     // Obstacle avoidance    
@@ -81,7 +83,7 @@ private:
     enum recovery_stage_enum  {recStageBackward, recStageTurn, recStageForward};
     float recovery_angle = 0.0;
     std::vector<PoseInt> best_path;
-    
+    //int bc_ndx = 0;
     
     std::vector<std::vector<float>> cost_map;   
     
@@ -90,11 +92,10 @@ private:
 
     std::vector<Obstacle> obstacles;
         
-    std::vector<PoseInt> findPath(const Pose& start, const Pose& goal, const std::vector<float>& obstacles, float mapWidth, float mapHeight) ;
     bool isValid(const Pose& pose, const std::vector<Obstacle>& obstacles, float mapWidth, float mapHeight);
     int astar_fail_count = 0;
     unsigned long last_renew_path_ms = 0;
-    unsigned long renew_path_timeout_ms = 3000;
+    unsigned long renew_path_timeout_ms = 500;
 };
 
 #endif // CHARGING_H

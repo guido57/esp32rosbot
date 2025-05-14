@@ -1,11 +1,11 @@
 #ifndef _ROS2_H
 #define _ROS2_H
 
+#include <Arduino.h>
 #include <rcl/rcl.h>
 #include <rclc/rclc.h>
 #include <rclc/executor.h>
 #include <std_msgs/msg/int32.h>
-#include "debuglog.h"
 
 
 #define CHECK_AND_REPORT(statement, error_msg)  \
@@ -40,5 +40,19 @@ rcl_ret_t InitROS(
   // void (*lidar_timer_callback)(rcl_timer_t *timer, int64_t last_call_time),
   // void (*motor_timer_callback)(rcl_timer_t *timer, int64_t last_call_time)
 );
+
+
+enum rcl_caller_t {
+  CALLER_SCAN,
+  CALLER_LOG,
+  CALLER_ODOM,
+  CALLER_TF,
+  CALLER_BATTERY,
+  CALLER_WIFI,
+  CALLER_MOTORS 
+};
+
+rcl_ret_t my_rcl_publish(rcl_caller_t caller, const rcl_publisher_t * publisher, const void * ros_message, rmw_publisher_allocation_t * allocation);
+
 
 #endif

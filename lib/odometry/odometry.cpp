@@ -101,7 +101,7 @@ rcl_ret_t publish_odom_to_base_link(double x, double y, double theta) {
     tf_message.transforms.capacity = 1;
 
     // Publish the TFMessage
-    rcl_ret_t ret = rcl_publish(&tf_publisher, &tf_message, NULL);
+    rcl_ret_t ret = my_rcl_publish(CALLER_TF,&tf_publisher, &tf_message, NULL);
 
     return ret;
 }
@@ -139,7 +139,7 @@ rcl_ret_t publish_odometry() {
   }
     
   // //printf("rcl_publish /odom\r\n");  
-  if( RCL_RET_OK != (ret = rcl_publish(&odom_publisher, &odom_msg, NULL))){
+  if( RCL_RET_OK != (ret = my_rcl_publish(CALLER_ODOM,&odom_publisher, &odom_msg, NULL))){
     LOG_ERROR("rcl_publish /odom error=%d",ret);  
     return ret;
   }
@@ -187,14 +187,14 @@ void IRAM_ATTR encoderl_interrupt() {
 }
 
 
-void odom_timer_callback(rcl_timer_t * timer, int64_t last_call_time)
-{
-    RCLC_UNUSED(last_call_time);
-    if (timer != NULL) {
+// void odom_timer_callback(rcl_timer_t * timer, int64_t last_call_time)
+// {
+//     RCLC_UNUSED(last_call_time);
+//     if (timer != NULL) {
     
-      // update_odometry();
-      // publish_odometry();
-    }
+//       // update_odometry();
+//       // publish_odometry();
+//     }
 
-}
+// }
 

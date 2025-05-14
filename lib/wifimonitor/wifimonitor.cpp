@@ -3,6 +3,7 @@
 #include <vector>
 #include "credentials.h"
 #include "debuglog.h"
+#include "ros2.h"
 
 extern void stop_motors();
 
@@ -10,7 +11,7 @@ WiFiMonitor::WiFiMonitor() {
     publish_count = 0;
 }
 
-void WiFiMonitor::begin(rcl_node_t * node) {
+void WiFiMonitor::init_publisher(rcl_node_t * node) {
     
     rclc_publisher_init_default(&wifi_publisher, node, ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, String), "wifi");
 }
@@ -61,16 +62,15 @@ void WiFiMonitor::publishStatus() {
         wifi_msg.data.data = wifi_status;
         wifi_msg.data.size = strlen(wifi_status);
         wifi_msg.data.capacity = sizeof(wifi_status);
-        rcl_publish(&wifi_publisher, &wifi_msg, NULL);
+        my_rcl_publish(CALLER_WIFI,&wifi_publisher, &wifi_msg, NULL);
     } else {
         LOG_WARN("WiFi disconnected!");
     }
 
-
     // Check Wi-Fi strength and reconnect if needed every 10 calls.
-    if (publish_count++ % 10 == 0) {
-        checkAndReconnectWiFi();
-    }
+    // if (publish_count++ % 10 == 0) {
+    //     checkAndReconnectWiFi();
+    // }
 }
 
 String WiFiMonitor::BssidToString(uint8_t * bssid){

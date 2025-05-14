@@ -8,30 +8,24 @@
 
 #include "ros2.h"
 #include "Ld19.h"
-#include <Wire.h>
-#include <Adafruit_INA219.h>
 #include "battery.h"
 #include "wifimonitor.h"
 #include "debuglog.h"
-#include "charging.h"
-#include "astar.h"
+#include "nav.h"
 
 #define LED_PIN 2
 
-// Lidar object
-Ld19 lidar;                  // declared in Ld19.cpp
 extern void motors_init();   // declared in motors.cpp
+extern void motors_loop();   // declared in motors.cpp
 
-Charging myCharging;         // the object to manage navigation to charger and charging 
-
+Nav myNav;                   // the object to manage navigation to charger and charging 
+Ld19 lidar;                  // the lidar object         
 Battery *battery;            // the battery monitor
+WiFiMonitor * wifimonitor;   // the WiFi monitor
 
-AStar astar;
-PoseInt start = {0, 0, 0.0f};
-PoseInt goal = {15, 18, 0.0f};
-std::vector<Pose> obstacles;  // Define obstacles if needed
-int mapWidthCm = 400, mapHeightCm = 400; // 40 m x 40 m
-bool pathFound = false;
+// ROS Shared flags
+bool ROS_initialized = false;
+bool ROS_connected = false;
 
 void setup() {
   Serial.begin(921600);
@@ -46,16 +40,11 @@ void setup() {
   // Initialize Battery object
   battery = new Battery(Wire);
 
-  // init WiFi and ROS2
-  rcl_ret_t ret;
-  if(RCL_RET_OK != (ret = InitROS())){
-    delay(500);
-    esp_restart();
-  }
-  // to begin the debugger we need a valid ROS2 node
-  debugLogger.begin(&node, DEBUG);  // Logs DEBUG, INFO, WARN, and ERROR
-
-  // Initialize OTA
+  // Initialize WiFiMonitor
+  wifimonitor = new WiFiMonitor();
+  wifimonitor->Connect();
+    
+  // Initialize OTA and its handlers
   ArduinoOTA.onStart([]() {
     Serial.println("OTA update started");
   });
@@ -66,70 +55,108 @@ void setup() {
     Serial.printf("OTA Error[%u]\n", error);
   });
   ArduinoOTA.begin();
-
-  myCharging.init();
-
-  // astar.initialize(start, goal, obstacles, mapWidthCm, mapHeightCm);
-
-  // create one obstacle
-  obstacles.push_back({5.0, 5.0, 0.0});
-  obstacles.push_back({5.0, 6.0, 0.0});
-  obstacles.push_back({6.0, 6.0, 0.0});
-  obstacles.push_back({6.0, 5.0, 0.0});
-
-  // turn on the blue LED
-  pinMode(LED_PIN, OUTPUT);
-  digitalWrite(LED_PIN, HIGH);
   
+  // Initialize Navigation
+  myNav.init();
+
   LOG_INFO("🚀 End of setup!");
 }
 
-unsigned long last_run_test = 0L;
-unsigned long run_test_duration = 1000L;
-unsigned long last_run_nav_to_charging = 0L;
-unsigned long nav_to_charging_interval = 100; // milliseconds
-
-int step = 0;
+// Declare variables to store elapsed times and counters
+unsigned long current_time = 0UL;
+unsigned long loop_time = 0UL;
+unsigned long ota_accum = 0, lidar_accum = 0, navigate_accum = 0, motors_accum = 0;
+unsigned long ping_accum = 0, spin_accum = 0, freq_accum = 0;
+unsigned long measurement_start = 0;
+int measurement_count = 0;
 
 void loop() {
-  rcl_ret_t ret = rclc_executor_spin_some(&executor, RCL_MS_TO_NS(5));
-  if(ret != RCL_RET_OK){
-    LOG_WARN("rclc_executor_spin_some error=%d %s",ret, rcutils_get_error_string().str);
-    rcl_reset_error();
+  
+  freq_accum +=  1000.0/ ((float)(millis()-loop_time));
+  loop_time = millis();
+  current_time = millis();
+  lidar_loop();                            // Runs even without ROS
+  lidar_accum += millis()-current_time;
+
+  current_time = millis();
+  myNav.navigateToChargingStation();  // Runs even without ROS
+  navigate_accum += millis() - current_time;
+
+  current_time = millis();    
+  motors_loop();                           // Runs even without ROS
+  motors_accum += millis() - current_time;
+  
+  // microros loop
+  if(ROS_initialized && WiFi.status() == WL_CONNECTED){
+    unsigned long start_pinging = millis();
+    rmw_ret_t rmw_ret = rmw_uros_ping_agent(100,1);  
+    ping_accum += millis() - start_pinging;
+    if(rmw_ret != RMW_RET_OK){
+      LOG_ERROR("Failed to ping agent. Error %d", rmw_ret);
+      ROS_connected = false;
+    }else{
+      ROS_connected = true;
+      current_time = millis();  
+      rcl_ret_t ret = rclc_executor_spin_some(&executor, RCL_MS_TO_NS(5));
+      spin_accum += millis() - current_time;
+      if (ret != RCL_RET_OK) {
+        LOG_WARN("rclc_executor_spin_some error=%d %s", ret, rcutils_get_error_string().str);
+        rcl_reset_error();
+      }
+    }
+  }
+ 
+  // The very first time WiFi is connected, initialize microros
+  if(!ROS_initialized && WiFi.status() == WL_CONNECTED){
+    rcl_ret_t ret = InitROS();
+    if (ret != RCL_RET_OK) {
+      LOG_ERROR("InitROS failed: %d", ret);
+    } else {
+      debugLogger.initPublisher(&node, INFO);  // Logs  DEBUG, INFO, WARN, and ERROR
+      LOG_INFO("✅ InitROS succeeded.");       // Value     0     1     2          3
+      ROS_initialized = true;
+  
+      // turn on the blue LED
+      pinMode(LED_PIN, OUTPUT);
+      digitalWrite(LED_PIN, HIGH);
+    }
   }
 
-  // if (!astar.isComplete()) {
-  //   bool success = astar.loop();
-  //   // bool success = astar.loop();
-  //   if (!success) {
-  //       Serial.println("A* Failed to find a path.");
-  //       delay(5000);  // Wait before restarting
-  //       astar.initialize(start, goal, obstacles, mapWidthCm, mapHeightCm);
-  //   }
-  // } else if (!pathFound) {
-  //   pathFound = true;
-  //   std::vector<PoseInt> path = astar.getPath();
-
-  //   if (path.empty()) {
-  //       LOG_DEBUG("No path found.");
-  //   } else {
-  //       LOG_DEBUG("Path found:");
-  //       for (const auto& p : path) {
-  //           LOG_DEBUG("tile %d %d", p.x, p.y);
-  //       }
-  //   }
-  //   delay(5000);  // Wait before restarting the algorithm
-  //   pathFound = false;
-  //   LOG_DEBUG("astar started");
-  //   astar.initialize(start, goal, obstacles, mapWidthCm, mapHeightCm);
-  // }
-
-  if( millis()> last_run_nav_to_charging + nav_to_charging_interval){
-     myCharging.navigateToChargingStation();
-     last_run_nav_to_charging = millis();
+  // try to reconnect to WiFi if disconnected
+  if(WiFi.status() != WL_CONNECTED){
+    wifimonitor->checkAndReconnectWiFi();
   }
-  
-  
 
+  // run OTA
+  current_time = millis();
   ArduinoOTA.handle();
+  ota_accum += millis() - current_time;
+  
+  // Increment measurement count and check if 3 seconds have passed
+  measurement_count++;
+  if (millis() - measurement_start >= 3000) {
+    // Calculate averages
+    float lidar_avg    = lidar_accum    / (float)measurement_count;
+    float navigate_avg = navigate_accum / (float)measurement_count;
+    float motors_avg   = motors_accum   / (float)measurement_count;
+    float ping_avg     = ping_accum     / (float)measurement_count;
+    float spin_avg     = spin_accum     / (float)measurement_count;
+    float freq_avg     = freq_accum     / (float)measurement_count;
+    float ota_avg      = ota_accum      / (float)measurement_count;
+
+    // Publish the averages
+    LOG_INFO("freq:%.1fHz OTA:%.1fms lidar:%.1fms nav:%.1fms motors:%.1fms Ping:%.1fms spin:%.1fms heap:%d",
+             freq_avg, ota_avg, lidar_avg, navigate_avg, motors_avg, ping_avg, spin_avg, esp_get_free_heap_size());
+      
+    // Reset accumulators and counters
+    freq_accum = 0;
+    ota_accum = 0;
+    lidar_accum = 0;
+    navigate_accum = 0;
+    motors_accum = 0;
+    ping_accum = 0;
+    spin_accum = 0;
+    measurement_count = 0;
+    measurement_start = millis();
+  }
 }

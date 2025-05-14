@@ -5,6 +5,16 @@
 #include "debuglog.h"
 
 
+// Assignment operator to assign a Pose to a Goal
+Goal& Goal::operator=(const Pose& pose) {
+    this->x = pose.x;
+    this->y = pose.y;
+    this->theta = pose.theta;
+    this->reachable = false; // Set reachable to false by default
+    this->ndx = 0; // Set ndx to 0 by default
+    return *this;
+}
+
 // Function to convert polar from lidar to Cartesian coordinates
 void polarToCartesian(float r, float theta, float &x, float &y) {
     x =   r * sin(theta); 
@@ -80,6 +90,12 @@ Pose getWheelsMidpointPose(const Pose &lidarPose) {
 float calculateDistance(Pose poseA, Pose poseB){
     float dx = poseA.x - poseB.x;
     float dy = poseA.y - poseB.y;
+    return sqrt( dx * dx + dy * dy );
+}
+
+float calculateDistance(Pose poseA, Goal goalB){
+    float dx = poseA.x - goalB.x;
+    float dy = poseA.y - goalB.y;
     return sqrt( dx * dx + dy * dy );
 }
 

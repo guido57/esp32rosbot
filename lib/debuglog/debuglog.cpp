@@ -1,9 +1,13 @@
 #include "debuglog.h"
+#include "ros2.h"
+
+extern bool ROS_initialized; // declared in main.cpp
+extern bool ROS_connected;   // declared in main.cpp
 
 DebugLogger debugLogger;
 DebugLogger::DebugLogger() {}
 
-void DebugLogger::begin(rcl_node_t *node, LogLevel log_level)
+void DebugLogger::initPublisher(rcl_node_t *node, LogLevel log_level)
 {
     
     min_log_level = log_level;
@@ -40,15 +44,16 @@ void DebugLogger::log(LogLevel level, const char* functionName, const char *form
     }
 
     // Log to Serial
-    //printf("%s\r\n", final_log);
-    
     // Publish to /debug_logs in ROS2
     log_msg.data.data = final_log;
     log_msg.data.size = strlen(final_log);
     log_msg.data.capacity = log_msg.data.size + 1;
-    rcl_ret_t ret = rcl_publish(&debug_pub, &log_msg, NULL);
-    if(ret |= RCL_RET_OK)
-        printf("DebugLogger::log: rcl_publish returned %d\r\n",ret);
+    if(ROS_connected){
+        rcl_ret_t ret = my_rcl_publish(CALLER_LOG,&debug_pub, &log_msg, NULL);
+        if(ret != RCL_RET_OK)
+            printf("DebugLogger::log: rcl_publish returned %d log size=%d\r\n",ret, log_msg.data.size);
+    }else
+        printf("%s\r\n", final_log);
 }
 
 const char* DebugLogger::levelToString(LogLevel level) {

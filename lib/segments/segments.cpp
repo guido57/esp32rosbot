@@ -380,7 +380,7 @@ bool Segments::detectPattern(LineSegment & segment, std::vector<float> & distanc
            
     std::vector<float> intensitiesVector = GetSegmentIntensities(segment,qualities);
     std::string chartValuesBefore = GetChartValues(intensitiesVector);
-    LOG_INFO("segment before conditioning: start=%d end=%d %s",
+    LOG_DEBUG("segment before conditioning: start=%d end=%d %s",
         segment.startIndex,segment.endIndex, chartValuesBefore.c_str());
     
     if(segment.startIndex < segment.endIndex)
@@ -464,7 +464,7 @@ bool Segments::detectPattern(LineSegment & segment, std::vector<float> & distanc
     segment.ul = ul;
     segment.pts = pts;
 
-    LOG_INFO("segment after conditioning: start=%d end=%d corr=%.2f pts=%.0f %s",
+    LOG_DEBUG("segment after conditioning: start=%d end=%d corr=%.2f pts=%.0f %s",
         segment.startIndex,segment.endIndex,segment.maxCorrelation,segment.pts,  chartValuesAfter.c_str());
 
     return true;
@@ -475,8 +475,8 @@ bool Segments::detectPattern(LineSegment & segment, std::vector<float> & distanc
 bool Segments::detectPatternAll(std::vector<LineSegment> & segments, std::vector<float> & ranges,std::vector<float> & qualities, int minimumPoints, float minLength, float maxLength) {
                    
         // Output results
-        printf("-------------------------------------------------------\r\n");
-        printf("start detectPatternAll for %d segments...\r\n", segments.size());
+        // printf("-------------------------------------------------------\r\n");
+        // printf("start detectPatternAll for %d segments...\r\n", segments.size());
         for (LineSegment & segment : segments) {
             // printf("startIndex=%d endIndex%d Length=%.3f\r\n", 
             //     segment.startIndex, segment.endIndex, segment.length);
