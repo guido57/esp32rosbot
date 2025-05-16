@@ -218,6 +218,20 @@ void printHeapMemory() {
 std::string poseToKey(float x, float y) {
     return std::to_string(x) + "_" + std::to_string(y);
 }
+
+
+String Nav::getStateString() const {
+    switch (state) {
+        case IDLE: return "IDLE";
+        case TELEOP: return "TELEOP";
+        case BREADCRUMB_FOLLOWING: return "BREADCRUMB_FOLLOWING";
+        case CROSS_X_AXIS: return "CROSS_X_AXIS";
+        case REVERSE_TO_GOAL: return "REVERSE_TO_GOAL";
+        case DOCKING: return "DOCKING";
+        case CHARGING: return "CHARGING";
+        default: return "UNKNOWN";
+    }
+}
 // ------------------------------------------
 // navigate to the charging station
 // ------------------------------------------
@@ -248,9 +262,6 @@ void Nav::navigateToChargingStation() {
         lastTarget = millis();
         targetVisible5 = true;
     }
-
-    bool no_way = false;
-
     switch (state) {
         case IDLE:
 
@@ -284,7 +295,7 @@ void Nav::navigateToChargingStation() {
                     PoseA = midWheelsPose;
                     velocityState = RobotState::RotatingToPosition;
                 }else{
-                    LOG_INFO("No target visible and no breadcrumbs. Stay in IDLE.");
+                    LOG_DEBUG("No target visible and no breadcrumbs. Stay in IDLE.");
                 }
             //}
             break;
@@ -367,7 +378,7 @@ void Nav::navigateToChargingStation() {
                 
                 int frg = astar.getFarthestReachableGoal();
                 if(frg < 0){
-                    LOG_DEBUG("No breadcrumb is reachable. Stop the motors and restart");
+                    LOG_DEBUG("No breadcrumb is reachable. Stop the motors.");
                     stop();
                     no_way = true;
                 }else{
@@ -377,9 +388,8 @@ void Nav::navigateToChargingStation() {
                         midWheelsPose.x, midWheelsPose.y, midWheelsPose.theta);
                     // get the farthest reachable goal
                     std::vector<PoseInt> new_path = astar.getPath(frg);
-                    astar.drawMap();
                     if(new_path.size() == 0){
-                        LOG_ERROR("frg=%d but no path. Stop the motors and restart",frg);
+                        LOG_ERROR("frg=%d but no path. Stop the motors",frg);
                         stop();
                         no_way = true;
                     }else{
@@ -405,9 +415,15 @@ void Nav::navigateToChargingStation() {
                         for(Goal bc : breadcrumbs->breadcrumbs){ 
                             LOG_DEBUG("Breadcrumb (%.3f,%.3f,%.3f)", bc.x, bc.y, bc.theta); 
                         }
+                        no_way = false;
                     }
                 }
                 astar.state = AStar::ASTAR_IDLE;
+                LOG_DEBUG("%s Switch from BREADCRUMB_FOLLOWING to IDLE",
+                    astar.state == AStar::ASTAR_COMPLETE ? "ASTAR_COMPLETE" : "ASTAR_FAILED" );
+                
+                astar.drawMap();
+                        
             }    
 
             // move toward the first Pose of breadcrumbs
@@ -442,7 +458,6 @@ void Nav::navigateToChargingStation() {
                     GoalB.x,GoalB.y,GoalB.theta);
                 move(vel.linear, vel.angular);
             }
-            
             break;
 
         case CROSS_X_AXIS:       // Goal: to x=0.5 y = 0.0
@@ -541,7 +556,6 @@ void Nav::navigateToChargingStation() {
             break;
     }
 }
-
 
 extern void motors_set_velocity(float linear_velocity, float angular_velocity);
 

@@ -7,18 +7,17 @@
 #include <unordered_set>
 #include <string>
 #include <cmath>
-//#include <Blinker.h>
 #include "cartesian.h"
 
 struct PoseInt {
-    int x;
-    int y;
+    int x;       // centimeters 
+    int y;       // centimeters
     float theta; // Angle in radians
 };
 
 struct GoalInt {
-    int x;
-    int y;
+    int x;       // centimeters   
+    int y;       // centimeters
     float theta; // Angle in radians
     bool reachable;
     int ndx;

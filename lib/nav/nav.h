@@ -24,7 +24,11 @@ public:
     bool getCurrentPose();
     void navigateToChargingStation();
     void recordBreadcrumb();
-    void followBreadcrumbs();
+    String getStateString() const;
+
+    // A* 
+    AStar astar;
+    bool no_way = false;
 
     Pose lidarPose;
     Pose midWheelsPose;
@@ -49,7 +53,7 @@ public:
 
 
 private:
-     enum State { IDLE, TELEOP, BREADCRUMB_FOLLOWING, BREADCRUMB_FOLLOWING_OLD, CHARGING, DOCKING, CROSS_X_AXIS, /* ROTATE_TO_GOAL,*/ REVERSE_TO_GOAL };
+    enum State { IDLE, TELEOP, BREADCRUMB_FOLLOWING, BREADCRUMB_FOLLOWING_OLD, CHARGING, DOCKING, CROSS_X_AXIS, /* ROTATE_TO_GOAL,*/ REVERSE_TO_GOAL };
     State state;
     
     int velocityState;
@@ -59,21 +63,9 @@ private:
     bool targetVisible5 = false;
     unsigned long targetTimeOut = 5000UL; // 5 seconds
     unsigned long lastTarget = 0UL;
-    //std::vector<Pose> breadcrumbs;  // Stores waypoints
     
     void fillBreadcrumbs();
     
-    // Obstacle avoidance    
-    enum class obstacle_avoid_ret {
-        NO_OBSTACLE,      // No obstacle detected, proceed normally
-        TURN_LEFT,        // Turn left to avoid an obstacle
-        TURN_RIGHT,       // Turn right to avoid an obstacle
-        MOVE_BACKWARD,    // Move backward in recovery mode
-        MOVE_FORWARD,     // Move forward after avoiding an obstacle
-        STOPPED           // No clear path, must stop
-    };
-    bool checkAngleClear(int startNdx, int stopNdx,float avoidance_dist);
-    obstacle_avoid_ret obstacleAvoidance(Velocity & vel, float avoidance_dist, float turn_speed, float forward_speed) ;
     bool recovering_from_avoidance = false;  // Flag to track recovery state
     float recovery_distance_remaining = 0.0; // Distance left before returning to normal navigation
     const float RECOVERY_DISTANCE = 0.2;     // Distance in meters to move forward after avoiding
@@ -83,17 +75,10 @@ private:
     enum recovery_stage_enum  {recStageBackward, recStageTurn, recStageForward};
     float recovery_angle = 0.0;
     std::vector<PoseInt> best_path;
-    //int bc_ndx = 0;
-    
-    std::vector<std::vector<float>> cost_map;   
-    
-    // A* 
-    AStar astar;
-
+        
     std::vector<Obstacle> obstacles;
         
     bool isValid(const Pose& pose, const std::vector<Obstacle>& obstacles, float mapWidth, float mapHeight);
-    int astar_fail_count = 0;
     unsigned long last_renew_path_ms = 0;
     unsigned long renew_path_timeout_ms = 500;
 };

@@ -22,6 +22,8 @@ Nav myNav;                   // the object to manage navigation to charger and c
 Ld19 lidar;                  // the lidar object         
 Battery *battery;            // the battery monitor
 WiFiMonitor * wifimonitor;   // the WiFi monitor
+extern Breadcrumbs *breadcrumbs; // defined in nav.cpp
+
 
 // ROS Shared flags
 bool ROS_initialized = false;
@@ -37,6 +39,9 @@ void setup() {
   motors_init();
   delay(2000);
 
+  // set the WiFi LED pin to output
+  pinMode(LED_PIN, OUTPUT);
+  
   // Initialize Battery object
   battery = new Battery(Wire);
 
@@ -69,6 +74,9 @@ unsigned long ota_accum = 0, lidar_accum = 0, navigate_accum = 0, motors_accum =
 unsigned long ping_accum = 0, spin_accum = 0, freq_accum = 0;
 unsigned long measurement_start = 0;
 int measurement_count = 0;
+uint32_t heap_min = INT32_MAX;
+unsigned long led_flash_period_ms = 200;
+unsigned long last_led_flash_period_ms = 0UL;
 
 void loop() {
   
@@ -115,23 +123,35 @@ void loop() {
       debugLogger.initPublisher(&node, INFO);  // Logs  DEBUG, INFO, WARN, and ERROR
       LOG_INFO("✅ InitROS succeeded.");       // Value     0     1     2          3
       ROS_initialized = true;
-  
-      // turn on the blue LED
-      pinMode(LED_PIN, OUTPUT);
-      digitalWrite(LED_PIN, HIGH);
     }
   }
 
-  // try to reconnect to WiFi if disconnected
-  if(WiFi.status() != WL_CONNECTED){
-    wifimonitor->checkAndReconnectWiFi();
+  if(WiFi.status() == WL_CONNECTED){
+    // blink the blue LED
+    if(WiFi.RSSI() < -65){
+      // blink the blue LED
+      if(millis() - last_led_flash_period_ms > led_flash_period_ms){
+        last_led_flash_period_ms = millis();
+        digitalWrite(LED_PIN, !digitalRead(LED_PIN));
+      }
+    }else{
+      // turn on the blue LED
+      digitalWrite(LED_PIN, HIGH);
+    }
+  }else{
+        // turn off the blue LED
+        digitalWrite(LED_PIN, LOW);
+        // try to reconnect to WiFi if disconnected
+        wifimonitor->checkAndReconnectWiFi();
   }
 
   // run OTA
   current_time = millis();
   ArduinoOTA.handle();
   ota_accum += millis() - current_time;
-  
+ 
+  heap_min = min(esp_get_free_heap_size(), heap_min);
+
   // Increment measurement count and check if 3 seconds have passed
   measurement_count++;
   if (millis() - measurement_start >= 3000) {
@@ -145,8 +165,9 @@ void loop() {
     float ota_avg      = ota_accum      / (float)measurement_count;
 
     // Publish the averages
-    LOG_INFO("freq:%.1fHz OTA:%.1fms lidar:%.1fms nav:%.1fms motors:%.1fms Ping:%.1fms spin:%.1fms heap:%d",
-             freq_avg, ota_avg, lidar_avg, navigate_avg, motors_avg, ping_avg, spin_avg, esp_get_free_heap_size());
+    LOG_INFO("freq:%.1fHz OTA:%.1fms lidar:%.0fms nav:%.0fms motors:%.0fms Ping:%.1fms spin:%.0fms heap:%d bc=%d no_way=%d %s",
+             freq_avg, ota_avg, lidar_avg, navigate_avg, motors_avg, ping_avg, spin_avg, 
+             heap_min, breadcrumbs->breadcrumbs.size(), myNav.no_way, myNav.getStateString().c_str());
       
     // Reset accumulators and counters
     freq_accum = 0;
@@ -158,5 +179,6 @@ void loop() {
     spin_accum = 0;
     measurement_count = 0;
     measurement_start = millis();
+    heap_min = INT32_MAX;  
   }
 }

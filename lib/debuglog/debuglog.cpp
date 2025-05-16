@@ -37,10 +37,10 @@ void DebugLogger::log(LogLevel level, const char* functionName, const char *form
     char final_log[1200];
     
     switch (level) {
-        case ERROR: snprintf(final_log, sizeof(final_log), "[ERROR] ❌ [%u] [%s] %s", timestamp, functionName, log_buffer);break;
-        case WARN : snprintf(final_log, sizeof(final_log), "[WARN]  ⚠ [%u] [%s] %s", timestamp, functionName, log_buffer);break;
-        case INFO : snprintf(final_log, sizeof(final_log), "[INFO]  ℹ [%u] [%s] %s", timestamp, functionName, log_buffer);break;
-        case DEBUG: snprintf(final_log, sizeof(final_log), "[DEBUG] ⚙ [%u] [%s] %s", timestamp, functionName, log_buffer);break;
+        case ERROR: snprintf(final_log, sizeof(final_log), "❌ [%u] [%s] %s", timestamp, functionName, log_buffer);break;
+        case WARN : snprintf(final_log, sizeof(final_log), " ⚠ [%u] [%s] %s", timestamp, functionName, log_buffer);break;
+        case INFO : snprintf(final_log, sizeof(final_log), " ℹ [%u] [%s] %s", timestamp, functionName, log_buffer);break;
+        case DEBUG: snprintf(final_log, sizeof(final_log), " ⚙ [%u] [%s] %s", timestamp, functionName, log_buffer);break;
     }
 
     // Log to Serial

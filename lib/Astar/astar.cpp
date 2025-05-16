@@ -12,7 +12,6 @@ AStar::AStar() : state(ASTAR_IDLE), current(nullptr) {
     for (int i = 0; i < 21; i++) {
         map_row[i] = "                                          ";
     }
-    
 }
 
 inline int cmToTile(int cm) {
@@ -27,7 +26,7 @@ void AStar::initialize(const Pose& midWheelsPose, std::vector<Goal> * _goals, co
     for(Goal & bc : *_goals){ 
         bc.ndx = ndx++;
         bc.reachable = false;
-        //LOG_DEBUG("Goal (%.3f,%.3f,%.3f) reachable=%d ndx=%d", bc.x, bc.y, bc.theta, bc.reachable, bc.ndx);
+        LOG_DEBUG("Goal (%.3f,%.3f,%.3f) reachable=%d ndx=%d", bc.x, bc.y, bc.theta, bc.reachable, bc.ndx);
     }
 
     goals = _goals;
@@ -41,7 +40,7 @@ void AStar::initialize(const Pose& midWheelsPose, std::vector<Goal> * _goals, co
         goalInts.push_back({static_cast<int>(roundf(100.0f * goal.x)), static_cast<int>(roundf(100.0f * goal.y)), goal.theta, false, ndx++});
     }
     
-    // Reset the state
+    // Reset the state clearing all the data structures
     current = nullptr;
     visitedSet.clear();
     while (!openSet.empty()) openSet.pop();
@@ -71,8 +70,6 @@ void AStar::initialize(const Pose& midWheelsPose, std::vector<Goal> * _goals, co
         int prx = static_cast<int>(round(100.0f * (pr.x + midWheelsPose.x)));
         int pry = static_cast<int>(round(100.0f * (pr.y + midWheelsPose.y)));
         map_row[cmToTile(prx-map_bottom)/2][cmToTile(map_left-1-pry)] = map_row[cmToTile(prx-map_bottom)/2][cmToTile(map_left-1-pry)  ] == '-' ? 'X' : 'R';
-        // LOG_DEBUG("rover at (%d,%d). cmToTile(prx-map_bottom)/2=%d  cmToTile(map_left-1-pry)=%d", 
-        //     prx, pry,cmToTile(prx-map_bottom)/2, cmToTile(map_left-1-pry));
     }
     int prx = static_cast<int>(round(100.0f * (roverPoints->at(1).x + midWheelsPose.x)));
     int pry = static_cast<int>(round(100.0f * (roverPoints->at(1).y + midWheelsPose.y)));
@@ -98,7 +95,6 @@ void AStar::initialize(const Pose& midWheelsPose, std::vector<Goal> * _goals, co
 
         // exclude obstacles out of the map    
         if(obst_x < map_bottom || obst_x >= map_top || obst_y < map_right || obst_y >= map_left){
-            // LOG_DEBUG("obstacle at (%d,%d) is out of the map", obst_x, obst_y);
             continue;
         }
 
@@ -131,15 +127,6 @@ void AStar::initialize(const Pose& midWheelsPose, std::vector<Goal> * _goals, co
     state = ASTAR_STARTED;
     steps = 0;
 
-    // if((*goals)[15].reachable == true){
-    //     LOG_DEBUG("==========================");
-    //     LOG_DEBUG("At the end of initialize Goal 15 is reachable...");
-    //     LOG_DEBUG("==========================");
-    //     for(int i=0; i < (*goals).size();i++){
-    //         Goal goal = (*goals)[i];
-    //         LOG_DEBUG("...see goal %d: (%f, %f) reachable=%d", i, goal.x, goal.y, goal.reachable); 
-    //     }
-    // }
 }
 
 // Verify if the move is valid, 
@@ -289,8 +276,8 @@ bool AStar::step() {
             }
         }
     }
-    if(allNodes.size() > 1600){
-        LOG_ERROR("A* search occupying more than 1600 nodes. HeapSize=%d. Aborting.", esp_get_free_heap_size());
+    if(allNodes.size() > 400){
+        LOG_ERROR("A* search occupying more than 400 nodes. HeapSize=%d. Aborting.", esp_get_free_heap_size());
         state = ASTAR_FAILED;
         steps++;
         return true;
