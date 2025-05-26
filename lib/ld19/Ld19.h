@@ -6,6 +6,7 @@
 #include <vector>
 #include <sensor_msgs/msg/laser_scan.h>
 #include "ros2.h"
+#include "PsramAllocator.h"
 
 #define BUF_SIZE 400
 
@@ -45,10 +46,11 @@ static const uint8_t CrcTable[256] = {
 
 class Ld19 {
 public:
-    std::vector<float> ranges;
+    std::vector<float,PsramAllocator<float>> ranges;
     std::vector<float> qualities;
     
     uint8_t packetBuffer[47];
+
 
     Ld19();
     void begin();
