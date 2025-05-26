@@ -216,14 +216,14 @@ std::string poseToKey(float x, float y) {
 
 String Nav::getStateString() const {
     switch (state) {
-        case IDLE: return "IDLE";
-        case TELEOP: return "TELEOP";
-        case BREADCRUMB_FOLLOWING: return "BREADCRUMB_FOLLOWING";
-        case CROSS_X_AXIS: return "CROSS_X_AXIS";
-        case REVERSE_TO_GOAL: return "REVERSE_TO_GOAL";
-        case DOCKING: return "DOCKING";
-        case CHARGING: return "CHARGING";
-        default: return "UNKNOWN";
+        case IDLE:                 return "IDLE";
+        case TELEOP:               return "TELEOP";
+        case BREADCRUMB_FOLLOWING: return "BC_FOLLOW";
+        case CROSS_X_AXIS:         return "CR_X_AXIS";
+        case REVERSE_TO_GOAL:      return "REVERSE";
+        case DOCKING:              return "DOCKING";
+        case CHARGING:             return "CHARGING";
+        default:                   return "UNKNOWN";
     }
 }
 // ------------------------------------------
