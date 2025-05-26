@@ -4,9 +4,9 @@
 
 // Left Motor PWM pins 
 # define PWM_LEFT_1_PIN 4
-# define PWM_LEFT_2_PIN 12
+# define PWM_LEFT_2_PIN 33
 // Right Motor PWM pins 
-# define PWM_RIGHT_1_PIN 27
+# define PWM_RIGHT_1_PIN 25 //27
 # define PWM_RIGHT_2_PIN 32
 
 //creating objects for right wheel and left wheel
@@ -105,7 +105,7 @@ void motors_control(float lv, float av){
         LOG_WARN("PID returned NAN\r\n");
         return;
     }
-    LOG_DEBUG("lv=%.3f av=%.3f vL=%.3f vR=%.3f msL=%.3f msR=%.3f eIL=%.3F EIR=%.3f encL=%d encR=%d errL=%d errR=%d LW=%.0f RW=%.0f",
+    LOG_INFO("lv=%.3f av=%.3f vL=%.3f vR=%.3f msL=%.3f msR=%.3f eIL=%.3F EIR=%.3f encL=%d encR=%d errL=%d errR=%d LW=%.0f RW=%.0f",
       linearVelocity, angularVelocity, vL, vR, currentmsL, currentmsR, leftWheel.eintegral, rightWheel.eintegral, enc_l_total, enc_r_total,enc_l_errors,enc_r_errors,  actuating_signal_LW, actuating_signal_RW
     );
   }
