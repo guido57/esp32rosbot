@@ -53,7 +53,7 @@ void Nav::init() {
 // Fill breadcrumbs with a simulated path
 void Nav::fillBreadcrumbs(){
     // breadcrumbs->breadcrumbs.push_back({0.0,0.0,0.0});
-    // breadcrumbs->breadcrumbs.push_back({0.4,0.0,0.0});
+    breadcrumbs->breadcrumbs.push_back({0.6,0.0,0.0});
     // breadcrumbs->breadcrumbs.push_back({0.4,0.3,0.0});
     // breadcrumbs->breadcrumbs.push_back({0.4,0.6,0.0});
     // breadcrumbs->breadcrumbs.push_back({0.4,0.8,0.0});
@@ -61,34 +61,34 @@ void Nav::fillBreadcrumbs(){
     // breadcrumbs->breadcrumbs.push_back({0.4,1.3,-1.57});
     // breadcrumbs->breadcrumbs.push_back({1.0,1.3,-1.57});
     // breadcrumbs->breadcrumbs.push_back({1.8,1.3,-1.57});
-    breadcrumbs->breadcrumbs.push_back({2.0,1.3,-1.57});
-    breadcrumbs->breadcrumbs.push_back({1.7,1.3,-1.57});
-    breadcrumbs->breadcrumbs.push_back({1.5,1.3,-1.57});
-    breadcrumbs->breadcrumbs.push_back({1.2,1.3,-1.57});
-    breadcrumbs->breadcrumbs.push_back({1.1,1.3,-1.57});
-    breadcrumbs->breadcrumbs.push_back({1.0,1.3,-1.57});
-    breadcrumbs->breadcrumbs.push_back({0.9,1.3,-1.57});
-    breadcrumbs->breadcrumbs.push_back({0.8,1.3,-1.57});
-    breadcrumbs->breadcrumbs.push_back({0.7,1.3,-1.57});
-    breadcrumbs->breadcrumbs.push_back({0.6,1.3,-1.57});
-    breadcrumbs->breadcrumbs.push_back({0.5,1.3,-1.57});
-    breadcrumbs->breadcrumbs.push_back({0.4,1.3,-1.57});
-    breadcrumbs->breadcrumbs.push_back({0.4,1.2,-1.57});
-    breadcrumbs->breadcrumbs.push_back({0.4,1.1,-1.57});
-    breadcrumbs->breadcrumbs.push_back({0.4,1.0,-1.57});
-    breadcrumbs->breadcrumbs.push_back({0.4,0.9,-1.57});
-    breadcrumbs->breadcrumbs.push_back({0.4,0.8,-1.57});
-    breadcrumbs->breadcrumbs.push_back({0.4,0.7,-1.57});
-    breadcrumbs->breadcrumbs.push_back({0.4,0.6,1.57});
-    breadcrumbs->breadcrumbs.push_back({0.4,0.5,1.57});
-    breadcrumbs->breadcrumbs.push_back({0.4,0.4,1.57});
-    breadcrumbs->breadcrumbs.push_back({0.4,0.3,1.57});
-    breadcrumbs->breadcrumbs.push_back({0.4,0.2,1.57});
-    breadcrumbs->breadcrumbs.push_back({0.4,0.1,1.57});
-    breadcrumbs->breadcrumbs.push_back({0.4,0.0,1.57});
-    breadcrumbs->breadcrumbs.push_back({0.3,0.0,1.57});
-    breadcrumbs->breadcrumbs.push_back({0.2,0.0,1.57});
-    breadcrumbs->breadcrumbs.push_back({0.1,0.0,1.57});
+    // breadcrumbs->breadcrumbs.push_back({2.0,1.3,-1.57});
+    // breadcrumbs->breadcrumbs.push_back({1.7,1.3,-1.57});
+    // breadcrumbs->breadcrumbs.push_back({1.5,1.3,-1.57});
+    // breadcrumbs->breadcrumbs.push_back({1.2,1.3,-1.57});
+    // breadcrumbs->breadcrumbs.push_back({1.1,1.3,-1.57});
+    // breadcrumbs->breadcrumbs.push_back({1.0,1.3,-1.57});
+    // breadcrumbs->breadcrumbs.push_back({0.9,1.3,-1.57});
+    // breadcrumbs->breadcrumbs.push_back({0.8,1.3,-1.57});
+    // breadcrumbs->breadcrumbs.push_back({0.7,1.3,-1.57});
+    // breadcrumbs->breadcrumbs.push_back({0.6,1.3,-1.57});
+    // breadcrumbs->breadcrumbs.push_back({0.5,1.3,-1.57});
+    // breadcrumbs->breadcrumbs.push_back({0.4,1.3,-1.57});
+    // breadcrumbs->breadcrumbs.push_back({0.4,1.2,-1.57});
+    // breadcrumbs->breadcrumbs.push_back({0.4,1.1,-1.57});
+    // breadcrumbs->breadcrumbs.push_back({0.4,1.0,-1.57});
+    // breadcrumbs->breadcrumbs.push_back({0.4,0.9,-1.57});
+    // breadcrumbs->breadcrumbs.push_back({0.4,0.8,-1.57});
+    // breadcrumbs->breadcrumbs.push_back({0.4,0.7,-1.57});
+    // breadcrumbs->breadcrumbs.push_back({0.4,0.6,1.57});
+    // breadcrumbs->breadcrumbs.push_back({0.4,0.5,1.57});
+    // breadcrumbs->breadcrumbs.push_back({0.4,0.4,1.57});
+    // breadcrumbs->breadcrumbs.push_back({0.4,0.3,1.57});
+    // breadcrumbs->breadcrumbs.push_back({0.4,0.2,1.57});
+    // breadcrumbs->breadcrumbs.push_back({0.4,0.1,1.57});
+    // breadcrumbs->breadcrumbs.push_back({0.4,0.0,1.57});
+    // breadcrumbs->breadcrumbs.push_back({0.3,0.0,1.57});
+    // breadcrumbs->breadcrumbs.push_back({0.2,0.0,1.57});
+    // breadcrumbs->breadcrumbs.push_back({0.1,0.0,1.57});
     // breadcrumbs->breadcrumbs.push_back({0.4,-0.4,1.57});
     // breadcrumbs->breadcrumbs.push_back({0.4,0.0,1.57});
 }
@@ -159,12 +159,12 @@ void Nav::recordBreadcrumb() {
         breadcrumbs->breadcrumbs.push_back( (Goal&) currentPose);
     }else{
         float dist = calculateDistance(currentPose, breadcrumbs->breadcrumbs.back());
-        //LOG_DEBUG("currentPose=(%.1f,%.1f). Distance from last breadcrumb: %.3f. breadcrumbs.size()=%d", 
-        //    currentPose.x, currentPose.y, dist, breadcrumbs->breadcrumbs.size());
+        LOG_DEBUG("currentPose=(%.1f,%.1f). Distance from last breadcrumb: %.3f. breadcrumbs.size()=%d", 
+           currentPose.x, currentPose.y, dist, breadcrumbs->breadcrumbs.size());
         if ( dist > 0.15) {
             breadcrumbs->breadcrumbs.push_back({currentPose.x, currentPose.y, currentPose.theta});
-            //LOG_DEBUG("Added a breadcrumb at (%.1f, %.1f). Now breadcrumbs has %d elements",
-            //    currentPose.x, currentPose.y, breadcrumbs->breadcrumbs.size());
+            LOG_INFO("Added a breadcrumb at (%.1f, %.1f). Now breadcrumbs has %d elements",
+               currentPose.x, currentPose.y, breadcrumbs->breadcrumbs.size());
         }
     }
 }
@@ -175,11 +175,6 @@ struct CompareNodePointers {
         return *a > *b; // Compare based on f-value
     }
 };
-
-// // Function to calculate distance between two poses
-// float distance(const Pose& a, const Pose& b) {
-//     return sqrt(pow(a.x - b.x, 2) + pow(a.y - b.y, 2));
-// }
 
 // Heuristic function (e.g., Euclidean distance)
 int heuristic(const Pose& current, const Pose& goal) {
@@ -192,7 +187,6 @@ int heuristic(const Pose& current, const Pose& goal) {
     // Calculate half widths for checking against center origin
     float halfWidth = mapWidth / 2.0f;
     float halfHeight = mapHeight / 2.0f;
-
 
     if (pose.x < -halfWidth || pose.x > halfWidth || pose.y < -halfHeight || pose.y > halfHeight) {
         return false; // Out of bounds
@@ -378,9 +372,17 @@ void Nav::navigateToChargingStation() {
                 
                 int frg = astar.getFarthestReachableGoal();
                 if(frg < 0){
-                    LOG_DEBUG("No breadcrumb is reachable. Stop the motors.");
+                    LOG_INFO("No breadcrumb is reachable from (%.1f,%.1f). Stop the motors.",
+                        midWheelsPose.x, midWheelsPose.y);
                     stop();
                     no_way = true;
+                    // for(int i = 0; i < breadcrumbs->breadcrumbs.size(); i++){
+                    //     LOG_INFO("Breadcrumbs[%d]=(%0.2f,%0.2f)", i, breadcrumbs->breadcrumbs[i].x, breadcrumbs->breadcrumbs[i].y);
+                    // }
+                    // for(int i=0; i < lidar.ranges.size(); i++){
+                    //     LOG_INFO("Lidar[%d]=%.2f", i, lidar.ranges[i]);
+                    // }
+                    
                 }else{
                     LOG_DEBUG("The farthest reachable goal is breadcrumbs[%d]=(%0.2f,%0.2f) with distance=%.3f from midWheelsPose(%.3f,%.3f,%.3f)", 
                         frg, breadcrumbs->breadcrumbs[frg].x, breadcrumbs->breadcrumbs[frg].y, 
@@ -426,11 +428,10 @@ void Nav::navigateToChargingStation() {
                         
             }    
 
-            // move toward the first Pose of breadcrumbs
+            // move toward the first Goal of breadcrumbs
             if(breadcrumbs->breadcrumbs.size() > 0 && no_way == false){
 
                 // find a breadcrumb not closer than 15 cm
-                Goal GoalB;
                 bool foundBreadcrumb = false;
                 int ndx;
                 // Iterate through breadcrumbs to find one not closer than 15 cm
@@ -451,7 +452,7 @@ void Nav::navigateToChargingStation() {
                               breadcrumbs->breadcrumbs[ndx].x, breadcrumbs->breadcrumbs[ndx].y, breadcrumbs->breadcrumbs[ndx].theta);
                 }
 
-                vel = computeVelocitySimple(midWheelsPose,{GoalB.x, GoalB.y,GoalB.theta },0.01,0.1,0.01,0.1,0.15,0.4);
+                vel = computeVelocitySimple(midWheelsPose,{GoalB.x, GoalB.y,GoalB.theta },0.01,0.12,0.01,0.22,0.15,0.4);
                 LOG_DEBUG("computed: vel.lin=%.3f vel.ang=%.3f LW=%.0f RW=%.0f to go from (%.3f,%.3f,%.3f) to (%.3f,%.3f,%.3f)", 
                     vel.linear,vel.angular,actuating_signal_LW, actuating_signal_RW,
                     midWheelsPose.x,midWheelsPose.y,midWheelsPose.theta,

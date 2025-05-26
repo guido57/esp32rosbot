@@ -33,7 +33,8 @@ public:
     Pose lidarPose;
     Pose midWheelsPose;
     Pose PoseA;  // the starting Pose 
-    
+    Goal GoalB;  // the current breadcrumb Pose we are 
+
     EMAFilter * x_filter;   
     EMAFilter * y_filter;
     EMAFilter * theta_filter;
