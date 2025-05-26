@@ -14,12 +14,19 @@ extern Ld19 lidar; // declared in main.cpp
 Ld19::Ld19() : pointAlign(false), last_angle_prev_scan(-1.0),packet_ndx (POINT_PER_PACK) {}
 
 void Ld19::begin() {
+
+    
     Serial2.setRxBufferSize(12000);
-    Serial2.begin(230400, SERIAL_8N1, 16, 17);
+    // Serial2.begin(230400, SERIAL_8N1, 16, 17); // for ESP32 D1 Mini
+    Serial2.begin(230400, SERIAL_8N1, 23, -1);    // for ESP32 WROVER (only RX is used)
     
     // Init the two vectors
+    LOG_DEBUG("Ld19::begin() start. Heap size: %d PSRAM=%d", heap_caps_get_free_size(MALLOC_CAP_INTERNAL), ESP.getFreePsram());
     ranges.assign(400, 0.0f);
+    LOG_DEBUG("Ld19::begin() after ranges.assign. Heap size: %d PSRAM=%d", heap_caps_get_free_size(MALLOC_CAP_INTERNAL), ESP.getFreePsram());
     qualities.assign(400, 0.0f);
+
+    
 }
 
 uint8_t Ld19::CalCRC8(uint8_t *p, uint8_t len) {
