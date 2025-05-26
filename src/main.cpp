@@ -15,15 +15,16 @@
 
 #define LED_PIN 2
 
-extern void motors_init();   // declared in motors.cpp
-extern void motors_loop();   // declared in motors.cpp
+extern void motors_init();       // declared in motors.cpp
+extern void motors_loop();       // declared in motors.cpp
 
-Nav myNav;                   // the object to manage navigation to charger and charging 
-Ld19 lidar;                  // the lidar object         
-Battery *battery;            // the battery monitor
-WiFiMonitor * wifimonitor;   // the WiFi monitor
+Nav myNav;                       // the object to manage navigation to charger and charging 
+Ld19 lidar;                      // the lidar object         
+Battery *battery;                // the battery monitor
+WiFiMonitor * wifimonitor;       // the WiFi monitor
 extern Breadcrumbs *breadcrumbs; // defined in nav.cpp
 
+TwoWire * myTwoWire;             // I2C bus for INA219
 
 // ROS Shared flags
 bool ROS_initialized = false;
@@ -32,6 +33,8 @@ bool ROS_connected = false;
 void setup() {
   Serial.begin(921600);
   printf("setup ...\r\n");
+  
+  LOG_INFO("1 FreeRAM=%d bytes  FreePSRAM=%d", heap_caps_get_free_size(MALLOC_CAP_INTERNAL), ESP.getFreePsram());
   
   lidar.begin();
   delay(1000);
@@ -42,13 +45,15 @@ void setup() {
   // set the WiFi LED pin to output
   pinMode(LED_PIN, OUTPUT);
   
+  myTwoWire = new TwoWire(0);
+  myTwoWire->begin(); // GPIO 21 (SDA) and GPIO 22 (SCL) are the default I2C pins for ESP32
   // Initialize Battery object
-  battery = new Battery(Wire);
-
+  battery = new Battery(*myTwoWire);
+  
   // Initialize WiFiMonitor
   wifimonitor = new WiFiMonitor();
   wifimonitor->Connect();
-    
+  
   // Initialize OTA and its handlers
   ArduinoOTA.onStart([]() {
     Serial.println("OTA update started");
@@ -60,10 +65,9 @@ void setup() {
     Serial.printf("OTA Error[%u]\n", error);
   });
   ArduinoOTA.begin();
-  
   // Initialize Navigation
   myNav.init();
-
+  
   LOG_INFO("🚀 End of setup!");
 }
 
@@ -73,6 +77,10 @@ unsigned long loop_time = 0UL;
 unsigned long ota_accum = 0, lidar_accum = 0, navigate_accum = 0, motors_accum = 0;
 unsigned long ping_accum = 0, spin_accum = 0, freq_accum = 0;
 unsigned long measurement_start = 0;
+int no_way_cum = 0;
+int all_nodes_size = 0;
+int all_obst_str_size = 0;
+int all_visited_set_size = 0;
 int measurement_count = 0;
 uint32_t heap_min = INT32_MAX;
 unsigned long led_flash_period_ms = 200;
@@ -80,7 +88,7 @@ unsigned long last_led_flash_period_ms = 0UL;
 
 void loop() {
   
-  freq_accum +=  1000.0/ ((float)(millis()-loop_time));
+  freq_accum +=  1000.0 / ((float)(millis()-loop_time));
   loop_time = millis();
   current_time = millis();
   lidar_loop();                            // Runs even without ROS
@@ -150,7 +158,13 @@ void loop() {
   ArduinoOTA.handle();
   ota_accum += millis() - current_time;
  
-  heap_min = min(esp_get_free_heap_size(), heap_min);
+  heap_min = min(heap_caps_get_free_size(MALLOC_CAP_INTERNAL), heap_min);
+
+  no_way_cum += myNav.no_way;
+
+  all_nodes_size = max(all_nodes_size, (int) myNav.astar.allNodes.size());
+  all_obst_str_size = max(all_obst_str_size, (int) myNav.astar.obstacles_str.size());
+  all_visited_set_size = max(all_visited_set_size, (int) myNav.astar.visitedSet.size());
 
   // Increment measurement count and check if 3 seconds have passed
   measurement_count++;
@@ -165,9 +179,10 @@ void loop() {
     float ota_avg      = ota_accum      / (float)measurement_count;
 
     // Publish the averages
-    LOG_INFO("freq:%.1fHz OTA:%.1fms lidar:%.0fms nav:%.0fms motors:%.0fms Ping:%.1fms spin:%.0fms heap:%d bc=%d no_way=%d %s",
+    LOG_INFO("fr:%.1fHz OTA:%.1fms lidar:%.0fms nav:%.0fms motors:%.0fms Ping:%.1fms spin:%.0fms heap:%dk bc=%d nodes=%d obst_str=%d visited=%d no_way=%d %s %.1f,%.1f->%.1f,%.1f",
              freq_avg, ota_avg, lidar_avg, navigate_avg, motors_avg, ping_avg, spin_avg, 
-             heap_min, breadcrumbs->breadcrumbs.size(), myNav.no_way, myNav.getStateString().c_str());
+             heap_min/1000, breadcrumbs->breadcrumbs.size(), all_nodes_size, all_obst_str_size,all_visited_set_size,  no_way_cum, myNav.getStateString().c_str(),
+             myNav.midWheelsPose.x, myNav.midWheelsPose.y, myNav.GoalB.x, myNav.GoalB.y);  
       
     // Reset accumulators and counters
     freq_accum = 0;
@@ -180,5 +195,9 @@ void loop() {
     measurement_count = 0;
     measurement_start = millis();
     heap_min = INT32_MAX;  
+    no_way_cum = 0;
+    all_nodes_size = 0;
+    all_obst_str_size = 0;
+    all_visited_set_size = 0;
   }
 }
