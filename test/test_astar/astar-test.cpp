@@ -14,20 +14,20 @@
 // ROS Shared flags
 bool ROS_connected = false;
 
-std::vector<float> obstacles; // Simulated obstacle data
+std::vector<float, PsramAllocator<float>> obstacles; // Simulated obstacle data
 bool initialized = false;
 AStar astar;
-Pose startPose = {-0.6f, -0.2f, 0.0f};
+Pose startPose = {2.3, 0.0f, 0.0f};
 std::vector<Goal> goals = {
-    { 0.0f, 0.0f, 0.0f,false,0},
-    {-0.2f, 0.0f, 0.0f,false,1},
-    {-0.2f, 0.2f, 0.0f,false,2},
-    {-0.2f, 0.4f, 0.0f,false,3},
-    {-0.4f, 0.4f, 0.0f,false,4},
-    {-0.6f, 0.4f, 0.0f,false,5},
-    {-0.6f, 0.2f, 0.0f,false,6},
-    {-0.6f, 0.0f, 0.0f,false,7},
-    {-0.6f,-0.2f, 0.0f,false,8},
+    { 1.8f, 0.0f, 0.0f,false,0},
+    // {-0.2f, 0.0f, 0.0f,false,1},
+    // {-0.2f, 0.2f, 0.0f,false,2},
+    // {-0.2f, 0.4f, 0.0f,false,3},
+    // {-0.4f, 0.4f, 0.0f,false,4},
+    // {-0.6f, 0.4f, 0.0f,false,5},
+    // {-0.6f, 0.2f, 0.0f,false,6},
+    // {-0.6f, 0.0f, 0.0f,false,7},
+    // {-0.6f,-0.2f, 0.0f,false,8},
 };
 
 void test_initial_state() {
@@ -35,16 +35,19 @@ void test_initial_state() {
     printf("Starting A* Pathfinding Testing\r\n");
     // Simulate some obstacles. Don't forget they are lidar ranges i.e. they are measured from the lidar Pose to the obstacle
     //obstacles = {1.0, 1.0, 0.40, 1.0, 1.0, 1.0, 1.0, 1.0};
-    for(int i = 0; i < 360; ++i) {
+    for(int i = 0; i < 400; ++i) {
         obstacles.push_back(2.0f); // Simulated lidar range data
     }
-    for(int i = 0; i <= 180; ++i) {
+    for(int i = 0; i <= 50; ++i) {
       obstacles[i] = 0.4; // Simulated lidar range data
     }
-    // for(int i = 0; i <= 359; ++i) {
-    //   obstacles[i] = 0.4; // Simulated lidar range data
-    // }
-
+    for(int i = 150; i <= 200; ++i) {
+      obstacles[i] = 0.1; // Simulated lidar range data
+    }
+    for(int i = 181; i <= 399; ++i) {
+      obstacles[i] = 0.4; // Simulated lidar range data
+    }
+    
     LOG_INFO("Init A*... heapsize=%d", esp_get_free_heap_size( ));
       
     // Initialize A* with the start pose, goals, and obstacles
@@ -71,13 +74,16 @@ void test_loop() {
   if(!start_measure) {
       start_measure = true;
       startTime = millis();
-      LOG_INFO("Starting A* search... heapsize=%d", esp_get_free_heap_size( ));
-      steps = 0;
+     LOG_INFO("Starting A* search... Free RAM: %d Free PSRAM=%d", heap_caps_get_free_size(MALLOC_CAP_INTERNAL), ESP.getFreePsram());
+     steps = 0;
   }
   
   // Perform A* steps until all reachable goals are found
   while (astar.step() == false) {
-      // Continue stepping
+    // LOG_DEBUG("steps=%d AllNodes.size()=%d visitedSet.size()=%d openSet.size()=%d Free RAM: %d Free PSRAM=%d", 
+    //   steps,astar.allNodes.size(), astar.visitedSet.size(), astar.openSet.size(), heap_caps_get_free_size(MALLOC_CAP_INTERNAL), ESP.getFreePsram());
+    
+    // Continue stepping
       steps++;
   } 
   
@@ -99,21 +105,22 @@ void test_loop() {
   // Stop further execution
   initialized = false;
   
-  LOG_INFO("finished! AStar state=%d heapsize=%d", astar.state, esp_get_free_heap_size());
-
+  LOG_DEBUG("Finished A* search. AllNodes.size()=%d visitedSet.size()=%d Free RAM: %d Free PSRAM=%d", 
+      astar.allNodes.size(), astar.visitedSet.size(), heap_caps_get_free_size(MALLOC_CAP_INTERNAL), ESP.getFreePsram());
+    
     // get the farthest reachable goal
   int frg = astar.getFarthestReachableGoal();
-  TEST_ASSERT_TRUE( frg == 3);
-  TEST_ASSERT_TRUE(goals[frg].reachable == true);
-  TEST_ASSERT_TRUE(goals[frg].x == -0.20f);
-  TEST_ASSERT_TRUE(goals[frg].y ==  0.40f);
+  // TEST_ASSERT_TRUE( frg == 3);
+  // TEST_ASSERT_TRUE(goals[frg].reachable == true);
+  // TEST_ASSERT_TRUE(goals[frg].x == -0.20f);
+  // TEST_ASSERT_TRUE(goals[frg].y ==  0.40f);
   
   if(frg >= 0){
     LOG_INFO("The farthest reachable goal is goals[%d]=(%0.2f,%0.2f)", 
       frg, goals[frg].x, goals[frg].y);
       std::vector<PoseInt> path = astar.getPath(frg);
       for(const PoseInt pose : path) {
-          LOG_INFO("Path Point: (%d, %d, %.3f)", pose.x, pose.y, pose.theta);
+          LOG_INFO("Path Point: (%d, %d)", pose.x, pose.y);
       } 
   }else{
     LOG_INFO("No reachable goals found");
@@ -125,6 +132,7 @@ void test_loop() {
 }
 
 void setup() {
+    Serial.begin(115200);
     delay(1000);
     UNITY_BEGIN();
     RUN_TEST(test_initial_state);

@@ -18,13 +18,17 @@ void WiFiMonitor::init_publisher(rcl_node_t * node) {
 
 // connect using ssid and pwd
 void WiFiMonitor::Connect(){
+    LOG_INFO("Free heap before WiFi.disconnect: %d", esp_get_free_heap_size());
     WiFi.disconnect(true);   // Reset Wi-Fi
+    LOG_INFO("Free heap before WiFi.mode: %d", esp_get_free_heap_size());
     WiFi.mode(WIFI_STA);     // Set to Station mode
+    LOG_INFO("Free heap before WiFi.begin: %d", esp_get_free_heap_size());
     WiFi.begin(ssid, pass);
     while (WiFi.status() != WL_CONNECTED) {
         delay(1000);
         Serial.print(".");
     }
+    LOG_INFO("Free heap after WiFi.begin: %d", esp_get_free_heap_size());
     LOG_INFO("Connected to Wi-Fi");
     LOG_INFO("IP Address: %s", WiFi.localIP().toString().c_str());
     LOG_INFO("SSID: %s",WiFi.SSID().c_str());
