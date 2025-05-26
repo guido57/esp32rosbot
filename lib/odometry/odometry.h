@@ -8,7 +8,7 @@
 
 // Encoder pins
 #define ENCL_A_PIN 26
-#define ENCL_B_PIN 33
+#define ENCL_B_PIN 35
 #define ENCR_A_PIN 13
 #define ENCR_B_PIN 14
 
