@@ -13,8 +13,17 @@
 struct PoseInt {
     int x;       // centimeters 
     int y;       // centimeters
-//    float theta; // Angle in radians
+    bool operator==(const PoseInt& other) const {
+        return x == other.x && y == other.y;
+    }
 };
+
+struct PoseIntHash {
+    std::size_t operator()(const PoseInt& pose_int) const {
+        return std::hash<int>()(pose_int.x) ^ (std::hash<int>()(pose_int.y) << 1);
+    }
+};
+
 
 struct GoalInt {
     int x;       // centimeters   
@@ -52,9 +61,12 @@ public:
     enum {ASTAR_IDLE, ASTAR_INIT,ASTAR_STARTED,ASTAR_COMPLETE, ASTAR_FAILED} state;
     std::unordered_set<std::string> obstacles_str;
     std::priority_queue<NodeInt*, std::vector<NodeInt*>, CompareNodeIntPointers> openSet;
-    std::vector<NodeInt*> allNodes;
+    //std::vector<NodeInt*> allNodes;
+    std::vector<NodeInt*, PsramAllocator<NodeInt*>> allNodes;
     int consecutive_no_progress;
-    std::unordered_set<std::string> visitedSet;
+    //std::unordered_set<std::string> visitedSet;
+    //std::unordered_set<PoseInt, PoseIntHash> visitedSet;
+    std::unordered_set<PoseInt, PoseIntHash, std::equal_to<PoseInt>, PsramAllocator<PoseInt>> visitedSet;
     int steps;
     
 private:

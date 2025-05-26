@@ -262,7 +262,6 @@ bool AStar::step() {
     float dtheta[] ={0 , PI/4,PI/2 ,3*PI/4, PI ,5*PI/4, 3*PI/2,7*PI/4 };
     
     for (int i = 0; i < 8; ++i) {
-        //PoseInt neighborPose = {current->pose.x + dx[i],current->pose.y + dy[i], dtheta[i]};
         PoseInt neighborPose = {current->pose.x + dx[i],current->pose.y + dy[i]};
         std::string key = poseToKey(cmToTile(neighborPose.x),cmToTile(neighborPose.y));    
         //  LOG_DEBUG("exploring (%d,%d) from (%d,%d) key=%s",
@@ -273,8 +272,10 @@ bool AStar::step() {
                 neighborPose.y < map_left    && 
                 neighborPose.x < map_top     
         ){ 
-            if (visitedSet.find(key) == visitedSet.end()) {
-                visitedSet.insert(key);
+            // if (visitedSet.find(key) == visitedSet.end()) {
+            //     visitedSet.insert(key);
+            if (visitedSet.find({cmToTile(neighborPose.x), cmToTile(neighborPose.y)}) == visitedSet.end()) {
+                visitedSet.insert({cmToTile(neighborPose.x), cmToTile(neighborPose.y)});
                 
                 if(isValidMove(neighborPose, ndx[i])){
                     int newG = current->g + 1;
