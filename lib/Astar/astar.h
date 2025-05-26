@@ -8,11 +8,12 @@
 #include <string>
 #include <cmath>
 #include "cartesian.h"
+#include "PsramAllocator.h"
 
 struct PoseInt {
     int x;       // centimeters 
     int y;       // centimeters
-    float theta; // Angle in radians
+//    float theta; // Angle in radians
 };
 
 struct GoalInt {
@@ -25,20 +26,23 @@ struct GoalInt {
 
 struct NodeInt {
     PoseInt pose;
-    int g, h, f;
+    int g; // Cost from start to this node
+    int h; // Heuristic cost to the goal
     NodeInt* parent;
+    int getF() const { return g + h; } // Calculate f on the fly
 };
 
 struct CompareNodeIntPointers {
     bool operator()(const NodeInt* a, const NodeInt* b) const{
-        return a->f > b->f;
+//        return a->f > b->f;
+        return a->getF() > b->getF();
     }
 };
 
 class AStar {
 public:
     AStar();
-    void initialize(const Pose & start, std::vector<Goal> * goals,  const std::vector<float>& ranges,float mapWidth, float mapHeight);
+    void initialize(const Pose & start, std::vector<Goal> * goals,  const std::vector<float, PsramAllocator<float>>& ranges,float mapWidth, float mapHeight);
     bool step();
     void drawMap();
     std::vector<PoseInt> getPath(int goalIndex = 0);
@@ -60,6 +64,7 @@ private:
     //std::vector<Goal> reachableGoals;
     PoseInt startInt;
     NodeInt* current;
+    NodeInt* allocateNodeInPsram(const PoseInt& pose, int g, int h, NodeInt* parent) ;
     std::string poseToKey(int x, int y);
     int heuristic(const PoseInt& a, const GoalInt& b);
     // bool isValidMove(PoseInt pose) ;

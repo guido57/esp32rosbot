@@ -18,8 +18,25 @@ inline int cmToTile(int cm) {
     return (cm + (cm >= 0 ? 2 : -2)) / 5;
 }
 
+NodeInt* AStar::allocateNodeInPsram(const PoseInt& pose, int g, int h, NodeInt* parent) {
+    // Allocate memory for NodeInt in PSRAM
+    NodeInt* node = static_cast<NodeInt*>(heap_caps_malloc(sizeof(NodeInt), MALLOC_CAP_SPIRAM));
+    if (!node) {
+        LOG_ERROR("Failed to allocate NodeInt in PSRAM!");
+        return nullptr;
+    }
+
+    // Initialize the NodeInt object
+    node->pose = pose;
+    node->g = g;
+    node->h = h;
+    node->parent = parent;
+
+    return node;
+}
+
 // Initialize the A* search
-void AStar::initialize(const Pose& midWheelsPose, std::vector<Goal> * _goals, const std::vector<float>& ranges_float,float mapWidth, float mapHeight) {
+void AStar::initialize(const Pose& midWheelsPose, std::vector<Goal> * _goals, const std::vector<float, PsramAllocator<float>>& ranges_float,float mapWidth, float mapHeight) {
     
     // reindex the goals
     int ndx = 0;
@@ -31,15 +48,10 @@ void AStar::initialize(const Pose& midWheelsPose, std::vector<Goal> * _goals, co
 
     goals = _goals;
     // convert midWheelsPose from float (meters) to int (centimeters)
-    startInt = {static_cast<int>(roundf(100.0f * midWheelsPose.x)),static_cast<int>(roundf(100.0f * midWheelsPose.y)),midWheelsPose.theta};
-    
-    // convert goal from float (meters) to int (centimeters)
-    goalInts.clear();
-    ndx = 0;            
-    for (Goal& goal : *_goals) {
-        goalInts.push_back({static_cast<int>(roundf(100.0f * goal.x)), static_cast<int>(roundf(100.0f * goal.y)), goal.theta, false, ndx++});
-    }
-    
+    startInt = {static_cast<int>(roundf(100.0f * midWheelsPose.x)),static_cast<int>(roundf(100.0f * midWheelsPose.y))};
+
+    int heap_before_cleaning = esp_get_free_heap_size();
+
     // Reset the state clearing all the data structures
     current = nullptr;
     visitedSet.clear();
@@ -48,6 +60,13 @@ void AStar::initialize(const Pose& midWheelsPose, std::vector<Goal> * _goals, co
     allNodes.clear();
     //reachableGoals.clear();
     obstacles_str.clear();
+    goalInts.clear();
+
+// convert goal from float (meters) to int (centimeters)
+    ndx = 0;            
+    for (Goal& goal : *_goals) {
+        goalInts.push_back({static_cast<int>(roundf(100.0f * goal.x)), static_cast<int>(roundf(100.0f * goal.y)), goal.theta, false, ndx++});
+    }
 
     // calculate map limits in centimeters
     map_right  = static_cast<int>(round(100.0f * (midWheelsPose.y - mapWidth / 2.0f)));   // y axis in centimeters
@@ -121,12 +140,12 @@ void AStar::initialize(const Pose& midWheelsPose, std::vector<Goal> * _goals, co
     }
 
     // create the first Node at the Start Pose
-    NodeInt* startNode = new NodeInt{ startInt, 0, 0, 0, nullptr};
+    //NodeInt* startNode = new NodeInt{ startInt, 0, 0, nullptr};
+    NodeInt* startNode = allocateNodeInPsram( startInt, 0, 0, nullptr);
     openSet.push(startNode);
     allNodes.push_back(startNode);
     state = ASTAR_STARTED;
     steps = 0;
-
 }
 
 // Verify if the move is valid, 
@@ -207,7 +226,8 @@ bool AStar::step() {
             //LOG_DEBUG("Reached goal at (%d, %d).", it->x, it->y);
 
             // Include the goal in the final path
-            NodeInt* goalNode = new NodeInt{{it->x,it->y,it->theta}, current->g + 1, 0, current->g + 1, current};
+            //NodeInt* goalNode = new NodeInt{{it->x,it->y}, current->g + 1, 0, current};
+            NodeInt* goalNode = allocateNodeInPsram({it->x,it->y}, current->g + 1, 0, current);
             // LOG_DEBUG("Adding goal node (%d, %d) with parent (%d, %d)",
             //     it->x, it->y, current->pose.x, current->pose.y);
             current = goalNode;
@@ -242,7 +262,8 @@ bool AStar::step() {
     float dtheta[] ={0 , PI/4,PI/2 ,3*PI/4, PI ,5*PI/4, 3*PI/2,7*PI/4 };
     
     for (int i = 0; i < 8; ++i) {
-        PoseInt neighborPose = {current->pose.x + dx[i],current->pose.y + dy[i], dtheta[i]};
+        //PoseInt neighborPose = {current->pose.x + dx[i],current->pose.y + dy[i], dtheta[i]};
+        PoseInt neighborPose = {current->pose.x + dx[i],current->pose.y + dy[i]};
         std::string key = poseToKey(cmToTile(neighborPose.x),cmToTile(neighborPose.y));    
         //  LOG_DEBUG("exploring (%d,%d) from (%d,%d) key=%s",
         //      neighborPose.x, neighborPose.y, current->pose.x, current->pose.y, key.c_str());
@@ -265,7 +286,8 @@ bool AStar::step() {
                         newH = std::min(newH, heuristic(neighborPose, goal));
                     }
                     
-                    NodeInt* neighbor = new NodeInt{neighborPose, newG, newH, newG + newH, current};
+                    //NodeInt* neighbor = new NodeInt{neighborPose, newG, newH, current};
+                    NodeInt* neighbor = allocateNodeInPsram(neighborPose, newG, newH, current);
                     
                     // LOG_DEBUG("Adding neighbor (%d, %d) with parent (%d, %d)",
                     //     neighborPose.x, neighborPose.y, current->pose.x, current->pose.y);
@@ -276,8 +298,8 @@ bool AStar::step() {
             }
         }
     }
-    if(allNodes.size() > 400){
-        LOG_ERROR("A* search occupying more than 400 nodes. HeapSize=%d. Aborting.", esp_get_free_heap_size());
+    if(allNodes.size() > 1600){
+        LOG_ERROR("A* search occupying more than 1600 nodes. HeapSize=%d. Aborting.", esp_get_free_heap_size());
         state = ASTAR_FAILED;
         steps++;
         return true;
