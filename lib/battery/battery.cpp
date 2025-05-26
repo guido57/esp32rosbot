@@ -8,9 +8,10 @@
 #include <debuglog.h>
 
 Battery::Battery(TwoWire &i2c, uint8_t address) : i2c_bus(i2c), sensor_address(address) {
+  
   if (!ina219.begin(&i2c_bus)) {
     printf("Failed to find INA219 chip!\r\n");
-    while (1);
+    
   }
   ina219.setCalibration_32V_2A();
   printf("INA219 Initialized\r\n");
