@@ -13,7 +13,7 @@ float Segments::calclength(float D1, float D2, int pos1, int pos2, float angular
     return std::sqrt(D1 * D1 + D2 * D2 - 2 * D1 * D2 * std::cos(angleDiff));
 }
 
-float Segments::calculateSegmentLength(const std::vector<float>& ranges, int startIndex, int endIndex, float angularResolution) {
+float Segments::calculateSegmentLength(std::vector<float, PsramAllocator<float>>& ranges, int startIndex, int endIndex, float angularResolution) {
     if (startIndex == endIndex || startIndex < 0 || endIndex >= ranges.size())
         return 0.0f;
     if(endIndex > startIndex)
@@ -22,7 +22,7 @@ float Segments::calculateSegmentLength(const std::vector<float>& ranges, int sta
         return calclength(ranges[startIndex], ranges[endIndex], startIndex, endIndex + ranges.size(), angularResolution);
 }
 
-float Segments::calculateSegmentSlope(const std::vector<float>& ranges, int startIndex, int endIndex, float angularResolution) {
+float Segments::calculateSegmentSlope(std::vector<float,PsramAllocator<float>>& ranges, int startIndex, int endIndex, float angularResolution) {
     int size = ranges.size();
     if (size == 0 || startIndex < 0 || endIndex < 0 || startIndex >= size || endIndex >= size || startIndex == endIndex)
         return 0.0f;
@@ -38,7 +38,7 @@ float Segments::calculateSegmentSlope(const std::vector<float>& ranges, int star
     return (ranges[endIndex] - ranges[startIndex]) / distance;
 }
 
-float Segments::calculateLineVariance(const std::vector<float>& ranges, int startIndex, int endIndex, float angularResolution) {
+float Segments::calculateLineVariance(std::vector<float,PsramAllocator<float>>& ranges, int startIndex, int endIndex, float angularResolution) {
     int size = ranges.size();
     if (size == 0 || startIndex < 0 || endIndex < 0 || startIndex >= size || endIndex >= size)
         return 0.0f;
@@ -74,7 +74,7 @@ float Segments::calculateLineVariance(const std::vector<float>& ranges, int star
 }
 
 // Find all the segments in a full scan
-std::vector<Segments::LineSegment> Segments::findSegments(const std::vector<float>& ranges, float angularResolution) {
+std::vector<Segments::LineSegment> Segments::findSegments(std::vector<float,PsramAllocator<float>>& ranges, float angularResolution) {
     int n = ranges.size();
     std::vector<LineSegment> segments;
 
@@ -328,7 +328,7 @@ std::vector<float> Segments::resampleIntensities(const std::vector<Point>& point
 // Convert polar to Cartesian coordinates
 void Segments::convertToCartesian(
                         std::vector<Point>& points, 
-                        const std::vector<float>& ranges, 
+                        const std::vector<float, PsramAllocator<float>>& ranges, 
                         const std::vector<float>& angles, 
                         const std::vector<float>& intensities) {
 
@@ -371,10 +371,10 @@ std::string Segments::GetChartValues(std::vector<float> &IntensitiesToBePrinted)
 }
 
 // Function to detect if the pattern is present in this segment
-bool Segments::detectPattern(LineSegment & segment, std::vector<float> & distances, std::vector<float> & qualities) {
+bool Segments::detectPattern(LineSegment & segment, std::vector<float,PsramAllocator<float>> & distances, std::vector<float> & qualities) {
          
     std::vector<float> segmentIntens;
-    std::vector<float> segmentRanges;
+    std::vector<float, PsramAllocator<float>> segmentRanges;
     std::vector<float> segmentAngles;
     float angle_increment = 2 * PI / qualities.size();
            
@@ -472,7 +472,7 @@ bool Segments::detectPattern(LineSegment & segment, std::vector<float> & distanc
 
 // Function to calculate correlation between the pattern and each segment
 // with a minimal length
-bool Segments::detectPatternAll(std::vector<LineSegment> & segments, std::vector<float> & ranges,std::vector<float> & qualities, int minimumPoints, float minLength, float maxLength) {
+bool Segments::detectPatternAll(std::vector<LineSegment> & segments, std::vector<float,PsramAllocator<float>> & ranges,std::vector<float> & qualities, int minimumPoints, float minLength, float maxLength) {
                    
         // Output results
         // printf("-------------------------------------------------------\r\n");

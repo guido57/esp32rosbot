@@ -6,6 +6,7 @@
 #include <vector>
 #include <numeric>
 #include <cmath>
+#include "PsramAllocator.h"
 
 class Segments {
 public:
@@ -30,11 +31,11 @@ public:
     void begin();
     float calclength(float D1, float D2, int pos1, int pos2, float angularResolution);
     float calculateMeans(const std::vector<float>& data, float& u, float& uh, float& ul);
-    float calculateSegmentLength(const std::vector<float>& ranges, int startIndex, int endIndex, float angularResolution);
-    float calculateSegmentSlope(const std::vector<float>& ranges, int startIndex, int endIndex, float angularResolution);
-    float calculateLineVariance(const std::vector<float>& ranges, int startIndex, int endIndex, float angularResolution);
+    float calculateSegmentLength(std::vector<float,PsramAllocator<float>>& ranges, int startIndex, int endIndex, float angularResolution);
+    float calculateSegmentSlope(std::vector<float,PsramAllocator<float>>& ranges, int startIndex, int endIndex, float angularResolution);
+    float calculateLineVariance(std::vector<float,PsramAllocator<float>>& ranges, int startIndex, int endIndex, float angularResolution);
     std::vector<float> standardizeData(const std::vector<float>& data) ;
-    std::vector<LineSegment> findSegments(const std::vector<float>& ranges, float angularResolution);
+    std::vector<LineSegment> findSegments(std::vector<float,PsramAllocator<float>>& ranges, float angularResolution);
     void buildPattern25();
     float energyPerc(const std::vector<float>& data);
     std::vector<float> crossCorrelationNormalized(const std::vector<float>& data, const std::vector<float>& pattern);
@@ -46,15 +47,15 @@ public:
     // Compute segment length and resample intensities at even spacing
     std::vector<float> resampleIntensities(const std::vector<Point>& points, int numSamples) ;
     void convertToCartesian(std::vector<Point>& points, 
-                            const std::vector<float>& ranges, 
+                            const std::vector<float, PsramAllocator<float>>& ranges, 
                             const std::vector<float>& angles, 
                             const std::vector<float>& intensities) ;
 
     std::vector<float> GetSegmentIntensities(Segments::LineSegment segment, std::vector<float> &qualities);
     std::string GetChartValues(std::vector<float> &IntensitiesToBePrinted);
 
-    bool detectPattern(LineSegment & segment, std::vector<float> & ranges, std::vector<float> & qualities);
-    bool detectPatternAll(std::vector<LineSegment> & segments, std::vector<float> & ranges, std::vector<float> & qualities, int minimalLength = 8, float minLength = 0.2, float maxLength = 0.3);
+    bool detectPattern(LineSegment & segment, std::vector<float,PsramAllocator<float>> & ranges, std::vector<float> & qualities);
+    bool detectPatternAll(std::vector<LineSegment> & segments, std::vector<float, PsramAllocator<float>> & ranges, std::vector<float> & qualities, int minimalLength = 8, float minLength = 0.2, float maxLength = 0.3);
 };
 
 #endif // SEGMENTS_H
