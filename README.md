@@ -18,6 +18,13 @@ This program, compared with https://github.com/guido57/uros_enc_LD19_arduino, ca
 
 ![](docs/block_diagram.png)
 
+# FEATURES
+
+Using this software, your diffdrive rover can:
+
+* navigate commanded by ROS2 teleop (/cmd_vel)
+* be viewed in rviz2
+* go back to the docking/charging station when battery goes low or no teleop command is received after a certain time
 
 
 # SCHEMATIC
